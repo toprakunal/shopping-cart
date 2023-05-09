@@ -5,6 +5,8 @@ import com.example.TomDemo2.dto.CartDto;
 import com.example.TomDemo2.dto.ItemDto;
 import com.example.TomDemo2.dto.converter.CartDtoConverter;
 import com.example.TomDemo2.dto.converter.ItemDtoConverter;
+import com.example.TomDemo2.exception.CartNotFoundException;
+import com.example.TomDemo2.exception.CouponNotFoundException;
 import com.example.TomDemo2.model.*;
 import com.example.TomDemo2.repository.CartRepository;
 import org.springframework.stereotype.Service;
@@ -105,12 +107,10 @@ public class CartService  {
     }}
 
     public void applyCouponToCart(int cartId, int couponId){
-        Optional<Cart> cartOptional = cartRepository.findById(cartId);
-        Optional<Coupon> couponOptional = couponService.findCouponById(couponId);
+        Cart cart = cartRepository.findById(cartId).orElseThrow(() -> new CartNotFoundException("Cart Not Found"));
+        Coupon coupon = couponService.findCouponById(couponId).orElseThrow(() -> new CouponNotFoundException("Coupon Not Found"));
 
-        if(cartOptional.isPresent() && couponOptional.isPresent() ){
-            Cart cart = cartOptional.get();
-            Coupon coupon = couponOptional.get();
+
             if(cart.getCoupon() == null){
 
                 if(cart.getFinalValue() > 0 ){
@@ -122,20 +122,19 @@ public class CartService  {
                     }
                     cartRepository.save(cart);
                     couponService.save(coupon);
-                }else
-                    System.out.println("finalvalue is 0");
-            }else
-                System.out.println("Coupon already exist");
+                }
+            }
 
         }
-    }
+
+
 
     public void removeCouponFromCart(int cartId){
-        Optional<Cart> cartOptional = cartRepository.findById(cartId);
+        Cart cart = cartRepository.findById(cartId).orElseThrow(()-> new CartNotFoundException("Cart Not Found"));
 
 
-        if(cartOptional.isPresent()  ){
-            Cart cart = cartOptional.get();
+
+
             Coupon coupon = cart.getCoupon();
             if(coupon != null){
                 cart.setFinalValue(cart.getTotalPrice());
@@ -143,10 +142,7 @@ public class CartService  {
                 coupon.setCart(null);
                 cartRepository.save(cart);
                 couponService.save(coupon);
-            }else
-                System.out.println("no coupon in cart");
-        }else
-            System.out.println("no coupon or cart found");
+            }
 
     }
 
@@ -155,14 +151,11 @@ public class CartService  {
 
 
     public List<ItemDto> findAllItems(int cartId){
-        Optional<Cart> cartOptional = cartRepository.findById(cartId);
+        Cart cart = cartRepository.findById(cartId).orElseThrow(()-> new CartNotFoundException("Cart Not Found"));
 
-        if(cartOptional.isPresent()){
-            Cart cart = cartOptional.get();
             return cart.getItems().stream().map(itemDtoConverter::convert).collect(Collectors.toList());
-        }else
-            return null;
-    }
+        }
+
 
     public List<CartDto> findCarts(){
 
