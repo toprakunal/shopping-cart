@@ -7,12 +7,12 @@ import com.example.TomDemo2.dto.converter.CartDtoConverter;
 import com.example.TomDemo2.dto.converter.ItemDtoConverter;
 import com.example.TomDemo2.exception.CartNotFoundException;
 import com.example.TomDemo2.exception.CouponNotFoundException;
+import com.example.TomDemo2.exception.ProductNotFoundException;
 import com.example.TomDemo2.model.*;
 import com.example.TomDemo2.repository.CartRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,12 +40,8 @@ public class CartService  {
     }
 
     public void addItemToCart(int cartId, int productId, int quantity){
-        Optional<Cart> cartOptional = cartRepository.findById(cartId);
-        Optional<Product> productOptional = productService.findProductById(productId);
-
-        if(cartOptional.isPresent() && productOptional.isPresent() && quantity>0){
-            Cart cart = cartOptional.get();
-            Product product = productOptional.get();
+        Cart cart = cartRepository.findById(cartId).orElseThrow(() -> new CartNotFoundException("Cart Not Found"));
+        Product product = productService.findProductById(productId).orElseThrow(() ->new ProductNotFoundException("Product Not Found"));
 
             Item item;
 
@@ -73,16 +69,12 @@ public class CartService  {
 
 
         }
-    }
+
 
 
     public void removeItemFromCart(int cartId, int productId, int quantity){
-        Optional<Cart> cartOptional = cartRepository.findById(cartId);
-        Optional<Product> productOptional = productService.findProductById(productId);
-
-        if(cartOptional.isPresent() && productOptional.isPresent()){
-            Cart cart = cartOptional.get();
-            Product product = productOptional.get();
+        Cart cart = cartRepository.findById(cartId).orElseThrow(() -> new CartNotFoundException("Cart Not Found"));
+        Product product = productService.findProductById(productId).orElseThrow(() ->new ProductNotFoundException("Product Not Found"));
 
             Item item = product.getItem();
 
@@ -104,7 +96,7 @@ public class CartService  {
 
 
 
-    }}
+    }
 
     public void applyCouponToCart(int cartId, int couponId){
         Cart cart = cartRepository.findById(cartId).orElseThrow(() -> new CartNotFoundException("Cart Not Found"));
